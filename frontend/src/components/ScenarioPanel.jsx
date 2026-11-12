@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { 
   Plus, 
   Trash2, 
-  Play, 
+  Info,
   ChevronDown, 
   ChevronUp,
   Waypoints,
@@ -114,7 +114,7 @@ const ScenarioPanel = () => {
               onClick={() => setShowProposed(!showProposed)}
               className="flex items-center justify-between w-full text-slate-400 text-xs mb-2"
             >
-              <span>Proposed Infrastructure (Government)</span>
+              <span>Illustrative Infrastructure (Demo)</span>
               {showProposed ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
             
@@ -148,9 +148,14 @@ const ScenarioPanel = () => {
           </div>
 
           {/* Run Simulation Button */}
-          <button className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg transition-colors">
-            <Play size={16} />
-            <span>Run Simulation</span>
+          <button
+            type="button"
+            disabled
+            className="w-full flex items-center justify-center gap-2 bg-slate-700 text-slate-400 py-2.5 rounded-lg cursor-not-allowed"
+            title="A calibrated traffic simulation engine is not connected."
+          >
+            <Info size={16} />
+            <span>Simulation engine not connected</span>
           </button>
         </div>
       )}
