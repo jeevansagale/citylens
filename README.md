@@ -14,14 +14,14 @@ CityLens brings together a map-based view of an urban area and a scenario workfl
 - Traffic and road-network visualization.
 - Scenario drawing for proposed infrastructure such as flyovers and bridges.
 - Before/after scenario comparison.
-- Analytics panel with a bridge-necessity score.
+- Analytics panel with explicitly labeled demonstration metrics and model-availability status.
 - Backend API for traffic, scenario, and analytics data.
 
 ## Important Data Disclaimer
 
 This repository includes demonstration data and mock analysis. Values shown in the hackathon scenario—including traffic, congestion, cost, savings, and AI score—must not be treated as verified live traffic measurements, engineering estimates, or validated model predictions.
 
-The current bridge-necessity score is a mock/demo score, not a trained and validated ML model. Government-data integration and live-data claims should be considered unverified unless supported by source documentation and operational API connections.
+The bridge-necessity and diversion endpoints now return an explicit unavailable status because no evaluated ML model or validated transport datasets are connected. No score or confidence estimate is generated. Government-data integration and live-data claims should be considered unverified unless supported by source documentation and operational API connections.
 
 ## Architecture
 
