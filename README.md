@@ -93,3 +93,13 @@ This is a hackathon prototype. It demonstrates a map-based scenario workflow, bu
 ## License
 
 No license file is currently included. Unless a license is added, the repository should be treated as source available for viewing, not as granting general permission to reuse or redistribute the code.
+## Backend Tests
+
+From the backend directory, run the validation and demo-boundary tests with:
+
+```bash
+cd backend
+python -m unittest discover -s tests -v
+```
+
+The API validates coordinate bounds and 24-hour input values. Traffic, government-project and analytics fixtures are explicitly tagged as demo data. The bridge-necessity and diversion endpoints report `unavailable` until validated datasets and an evaluated model are connected.
