@@ -8,32 +8,12 @@ import {
   ChevronDown,
   ChevronUp,
   AlertTriangle,
-  CheckCircle2,
-  Sparkles
+  Info
 } from 'lucide-react';
-import { CITY_METRICS, PROPOSED_INFRASTRUCTURE } from '../data/puneData';
+import { CITY_METRICS } from '../data/puneData';
 
 const AnalyticsPanel = () => {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [showAIRecommendation, setShowAIRecommendation] = useState(false);
-
-  // Mock AI analysis
-  const aiAnalysis = {
-    bridgeNecessityScore: 87,
-    recommendation: 'Highly Recommended',
-    expectedImpact: {
-      travelTimeReduction: 58,
-      congestionReduction: 42,
-      costBenefit: 2.67, // Ratio
-      paybackPeriod: 4.2 // Years
-    },
-    reasoning: [
-      'Current junction handles 285K vehicles/day - 40% over capacity',
-      'Average wait time of 22 minutes during peak hours',
-      'Alternate routes already at 85%+ capacity',
-      'ROI positive within 5 years based on productivity gains'
-    ]
-  };
 
   return (
     <div className="absolute bottom-4 right-4 w-80 glass rounded-xl overflow-hidden">
@@ -42,12 +22,16 @@ const AnalyticsPanel = () => {
         className="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-700/30"
         onClick={() => setIsExpanded(!isExpanded)}
       >
-        <h3 className="text-white font-semibold">Analytics & AI Insights</h3>
+        <h3 className="text-white font-semibold">Demo Analytics</h3>
         {isExpanded ? <ChevronUp size={20} className="text-slate-400" /> : <ChevronDown size={20} className="text-slate-400" />}
       </div>
 
       {isExpanded && (
         <div className="p-4 pt-0 space-y-4">
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-xs text-amber-100">
+            <strong>STATIC DEMO DATA</strong>
+            <p className="mt-1 text-amber-100/80">These metrics are illustrative fixtures, not live measurements or verified government data.</p>
+          </div>
           {/* KPI Cards */}
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-slate-700/50 rounded-lg p-3">
@@ -96,70 +80,21 @@ const AnalyticsPanel = () => {
             </div>
           </div>
 
-          {/* AI Recommendation Section */}
-          <div className="bg-gradient-to-r from-purple-900/50 to-blue-900/50 rounded-lg p-4 border border-purple-500/30">
-            <div 
-              className="flex items-center justify-between cursor-pointer"
-              onClick={() => setShowAIRecommendation(!showAIRecommendation)}
-            >
-              <div className="flex items-center gap-2">
-                <Sparkles size={18} className="text-purple-400" />
-                <span className="text-white font-medium">AI Analysis: Wakad Flyover</span>
-              </div>
-              {showAIRecommendation ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+          {/* Model availability */}
+          <div className="rounded-lg border border-slate-600 bg-slate-800/70 p-4">
+            <div className="flex items-center gap-2 text-white font-medium">
+              <Info size={16} className="text-slate-300" />
+              <span>Infrastructure analysis unavailable</span>
             </div>
-
-            {/* Score Badge */}
-            <div className="flex items-center gap-3 mt-3">
-              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-green-500 to-green-600 flex items-center justify-center">
-                <span className="text-2xl font-bold text-white">{aiAnalysis.bridgeNecessityScore}</span>
-              </div>
-              <div>
-                <p className="text-green-400 font-semibold">{aiAnalysis.recommendation}</p>
-                <p className="text-slate-400 text-sm">Bridge Necessity Score</p>
-              </div>
-            </div>
-
-            {showAIRecommendation && (
-              <div className="mt-4 space-y-3">
-                {/* Impact Metrics */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-slate-800/50 rounded p-2">
-                    <p className="text-xs text-slate-400">Travel Time</p>
-                    <p className="text-green-400 font-semibold">-{aiAnalysis.expectedImpact.travelTimeReduction}%</p>
-                  </div>
-                  <div className="bg-slate-800/50 rounded p-2">
-                    <p className="text-xs text-slate-400">Congestion</p>
-                    <p className="text-green-400 font-semibold">-{aiAnalysis.expectedImpact.congestionReduction}%</p>
-                  </div>
-                  <div className="bg-slate-800/50 rounded p-2">
-                    <p className="text-xs text-slate-400">Cost-Benefit Ratio</p>
-                    <p className="text-blue-400 font-semibold">{aiAnalysis.expectedImpact.costBenefit}x</p>
-                  </div>
-                  <div className="bg-slate-800/50 rounded p-2">
-                    <p className="text-xs text-slate-400">Payback Period</p>
-                    <p className="text-blue-400 font-semibold">{aiAnalysis.expectedImpact.paybackPeriod} yrs</p>
-                  </div>
-                </div>
-
-                {/* Reasoning */}
-                <div className="space-y-1">
-                  <p className="text-xs text-slate-400 font-medium">AI Reasoning:</p>
-                  {aiAnalysis.reasoning.map((reason, i) => (
-                    <div key={i} className="flex items-start gap-2 text-xs">
-                      <CheckCircle2 size={12} className="text-green-400 mt-0.5 flex-shrink-0" />
-                      <span className="text-slate-300">{reason}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <p className="mt-2 text-xs leading-relaxed text-slate-400">
+              No validated traffic feed, route-capacity dataset or evaluated ML model is connected. CityLens does not currently calculate a bridge-necessity score or predict project savings.
+            </p>
           </div>
 
           {/* Scenario Impact Summary */}
-          <div className="text-center pt-2 border-t border-slate-700">
+          <div className="border-t border-slate-700 pt-3 text-center">
             <p className="text-xs text-slate-400">
-              With proposed flyover: <span className="text-green-400 font-semibold">22 min → 9 min</span> avg travel time
+              Scenario impact comparisons are not available until a calibrated traffic simulation is connected.
             </p>
           </div>
         </div>
