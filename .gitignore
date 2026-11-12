@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Environment and local secrets
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+**/.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# Frontend builds
+dist/
+build/
+coverage/
+
+# Tooling and OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
