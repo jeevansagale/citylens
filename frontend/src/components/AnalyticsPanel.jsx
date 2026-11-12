@@ -1,7 +1,5 @@
 import { useState } from 'react';
 import { 
-  TrendingDown, 
-  TrendingUp, 
   Clock, 
   Car, 
   Wind,
@@ -42,7 +40,6 @@ const AnalyticsPanel = () => {
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold text-white">{CITY_METRICS.avgTravelTime}</span>
                 <span className="text-slate-400 text-sm">min</span>
-                <TrendingUp size={14} className="text-red-400" />
               </div>
             </div>
 
@@ -53,7 +50,6 @@ const AnalyticsPanel = () => {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold text-orange-400">{CITY_METRICS.congestionIndex}%</span>
-                <TrendingUp size={14} className="text-red-400" />
               </div>
             </div>
 
@@ -64,7 +60,6 @@ const AnalyticsPanel = () => {
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xl font-bold text-white">{CITY_METRICS.accidentRate}</span>
-                <TrendingDown size={14} className="text-green-400" />
               </div>
             </div>
 
