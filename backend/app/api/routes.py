@@ -1,29 +1,53 @@
 from fastapi import APIRouter
-from pydantic import BaseModel
-from typing import List, Optional
-import random
+from pydantic import BaseModel, Field, field_validator
+from typing import List, Literal, Optional
+from math import asin, cos, radians, sin, sqrt
 
 router = APIRouter()
 
 # ============ Models ============
 
-class Coordinates(BaseModel):
-    latitude: float
-    longitude: float
-
 class ScenarioInput(BaseModel):
-    name: str
-    type: str  # 'bridge', 'flyover', 'tunnel', 'road'
-    coordinates: List[List[float]]  # [[lng, lat], [lng, lat], ...]
-    
+    name: str = Field(min_length=1, max_length=100)
+    type: Literal["bridge", "flyover", "tunnel", "road"]
+    coordinates: List[List[float]] = Field(min_length=2, max_length=500)  # [[lng, lat], ...]
+
+    @field_validator("coordinates")
+    @classmethod
+    def validate_coordinates(cls, coordinates):
+        for point in coordinates:
+            if len(point) != 2:
+                raise ValueError("Each coordinate must contain longitude and latitude")
+            longitude, latitude = point
+            if not -180 <= longitude <= 180 or not -90 <= latitude <= 90:
+                raise ValueError("Coordinate is outside valid longitude/latitude bounds")
+        return coordinates
+
 class TrafficSimulationInput(BaseModel):
-    hour: int  # 0-23
+    hour: int = Field(ge=0, le=23)
     scenario_id: Optional[str] = None
 
 class BridgeAnalysisInput(BaseModel):
-    start_coords: List[float]  # [lng, lat]
-    end_coords: List[float]    # [lng, lat]
-    bridge_type: str           # 'bridge', 'flyover', 'tunnel'
+    start_coords: tuple[float, float]  # [lng, lat]
+    end_coords: tuple[float, float]    # [lng, lat]
+    bridge_type: Literal["bridge", "flyover", "tunnel"]
+
+    @field_validator("start_coords", "end_coords")
+    @classmethod
+    def validate_point(cls, point):
+        longitude, latitude = point
+        if not -180 <= longitude <= 180 or not -90 <= latitude <= 90:
+            raise ValueError("Coordinate is outside valid longitude/latitude bounds")
+        return point
+
+def haversine_km(start: List[float], end: List[float]) -> float:
+    """Calculate geodesic distance between [longitude, latitude] points."""
+    lon1, lat1 = radians(start[0]), radians(start[1])
+    lon2, lat2 = radians(end[0]), radians(end[1])
+    delta_lon = lon2 - lon1
+    delta_lat = lat2 - lat1
+    value = sin(delta_lat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(delta_lon / 2) ** 2
+    return 6371.0088 * 2 * asin(sqrt(min(1.0, max(0.0, value))))
 
 # ============ Traffic Data ============
 
@@ -31,6 +55,8 @@ class BridgeAnalysisInput(BaseModel):
 async def get_current_traffic():
     """Get current traffic data for all road segments"""
     return {
+        "dataMode": "demo",
+        "dataNotice": "Static demonstration fixture; not live or verified traffic data.",
         "timestamp": "2026-04-07T11:00:00",
         "segments": [
             {
@@ -72,6 +98,8 @@ async def simulate_traffic(input: TrafficSimulationInput):
     simulated_density = min(1.0, base_density * multiplier)
     
     return {
+        "dataMode": "illustrative_demo",
+        "assumptions": "Fixed peak-hour multipliers; not calibrated to measured traffic.",
         "hour": input.hour,
         "isPeakHour": 8 <= input.hour <= 11 or 17 <= input.hour <= 21,
         "trafficMultiplier": multiplier,
@@ -97,22 +125,17 @@ async def analyze_scenario(scenario: ScenarioInput):
     
     factors = impact_factors.get(scenario.type, impact_factors['road'])
     
-    # Calculate distance (simplified)
+    # Use geodesic distance rather than degree-space Euclidean distance.
     coords = scenario.coordinates
-    if len(coords) >= 2:
-        # Simple distance calculation
-        dist = sum(
-            ((coords[i+1][0] - coords[i][0])**2 + (coords[i+1][1] - coords[i][1])**2)**0.5 
-            for i in range(len(coords)-1)
-        ) * 111  # Rough conversion to km
-    else:
-        dist = 1.0
+    dist = sum(haversine_km(coords[i], coords[i + 1]) for i in range(len(coords) - 1))
     
     estimated_cost = dist * factors['cost_per_km']
     time_reduction = factors['time_reduction'] * 100
     
     return {
-        "scenario_id": f"scenario_{random.randint(1000, 9999)}",
+        "scenario_id": f"demo-{scenario.type}-{round(dist, 3)}",
+        "dataMode": "illustrative_demo",
+        "assumptions": "Fixed demonstration cost and impact factors; not validated against a transport model.",
         "name": scenario.name,
         "type": scenario.type,
         "analysis": {
@@ -137,91 +160,27 @@ async def analyze_scenario(scenario: ScenarioInput):
 
 @router.post("/ai/bridge-necessity-score")
 async def calculate_bridge_necessity(input: BridgeAnalysisInput):
-    """
-    Calculate AI-based Bridge Necessity Score
-    This would integrate with your ML model trained by juniors
-    """
-    # Mock AI scoring - replace with actual ML model
-    
-    # Factors that would influence the score
-    # - Current traffic density at the location
-    # - Number of alternate routes
-    # - Population density in the area
-    # - Economic activity in connected zones
-    # - Historical accident data
-    
-    base_score = 75
-    
-    # Simulate different scores based on bridge type
-    type_bonus = {
-        'flyover': 12,
-        'bridge': 8,
-        'tunnel': 5
-    }.get(input.bridge_type, 0)
-    
-    # Add some randomness to simulate ML prediction
-    variation = random.randint(-5, 10)
-    
-    final_score = min(100, max(0, base_score + type_bonus + variation))
-    
+    """Return an explicit unavailable status until validated data and a model exist."""
+    distance_km = haversine_km(list(input.start_coords), list(input.end_coords))
     return {
-        "score": final_score,
-        "recommendation": "Highly Recommended" if final_score >= 80 else "Recommended" if final_score >= 60 else "Review Required",
-        "confidence": round(0.85 + random.random() * 0.1, 2),
-        "factors": {
-            "trafficDensity": {"value": 0.92, "impact": "high", "contribution": 25},
-            "alternateRoutes": {"value": 2, "impact": "medium", "contribution": 15},
-            "economicActivity": {"value": "high", "impact": "high", "contribution": 20},
-            "accidentHistory": {"value": 23, "impact": "medium", "contribution": 12},
-            "populationDensity": {"value": 15000, "impact": "high", "contribution": 18}
-        },
-        "expectedImpact": {
-            "travelTimeReduction": 58,
-            "congestionReduction": 42,
-            "costBenefitRatio": 2.67,
-            "paybackPeriodYears": 4.2,
-            "annualProductivitySavings": 120  # Crores
-        },
-        "reasoning": [
-            "Current junction handles 285K vehicles/day - 40% over optimal capacity",
-            "Average peak hour wait time of 22 minutes significantly impacts productivity",
-            "Only 2 alternate routes available, both at 85%+ capacity",
-            "High IT park employment (500K+ employees) in connected zone",
-            "ROI positive within 5 years based on productivity gains"
-        ]
+        "analysisStatus": "unavailable",
+        "dataMode": "not_connected",
+        "score": None,
+        "recommendation": "Not evaluated",
+        "confidence": None,
+        "distanceKm": round(distance_km, 3),
+        "interventionType": input.bridge_type,
+        "reason": "No validated traffic, route-capacity, population or accident dataset and no evaluated ML model are connected.",
     }
 
 @router.post("/ai/diversion-impact")
 async def predict_diversion_impact(scenario: ScenarioInput):
-    """Predict impact of road diversions during construction"""
-    
+    """Report that diversion analysis is unavailable without a traffic assignment model."""
     return {
+        "analysisStatus": "unavailable",
+        "dataMode": "not_connected",
         "scenario": scenario.name,
-        "constructionPhase": {
-            "duration": "18 months",
-            "phases": [
-                {"name": "Phase 1", "duration": "6 months", "trafficImpact": "30%"},
-                {"name": "Phase 2", "duration": "8 months", "trafficImpact": "50%"},
-                {"name": "Phase 3", "duration": "4 months", "trafficImpact": "20%"}
-            ]
-        },
-        "diversionRoutes": [
-            {
-                "route": "Via Baner Road",
-                "additionalTime": 15,  # minutes
-                "capacity": "adequate"
-            },
-            {
-                "route": "Via Pimple Saudagar",
-                "additionalTime": 20,
-                "capacity": "limited"
-            }
-        ],
-        "recommendations": {
-            "bestConstructionWindow": "10 PM - 6 AM",
-            "recommendedStartMonth": "October",
-            "alternateRoutePreparation": "Widen Baner junction by 2 lanes before starting"
-        }
+        "message": "No validated road-network and traffic-assignment model is connected; route-level diversion impacts are not estimated.",
     }
 
 # ============ Government Data ============
@@ -230,6 +189,8 @@ async def predict_diversion_impact(scenario: ScenarioInput):
 async def get_govt_projects():
     """Get ongoing government infrastructure projects"""
     return {
+        "dataMode": "demo",
+        "dataNotice": "Illustrative project and hotspot fixtures; not verified government records.",
         "pwd": {
             "name": "Public Works Department",
             "projects": [
@@ -263,6 +224,8 @@ async def get_govt_projects():
 async def get_analytics_summary():
     """Get city-wide analytics summary"""
     return {
+        "dataMode": "demo",
+        "dataNotice": "Static demonstration metrics; not live measurements.",
         "currentMetrics": {
             "avgTravelTime": 22,
             "congestionIndex": 78,
